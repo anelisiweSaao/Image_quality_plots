@@ -68,43 +68,18 @@ def update():
         except ValueError:
             raise ValueError("end date field is invalid")
 
-
-        try:
-            #Convert the integer timestamps in the index to a DatetimeIndex:
-            #first=pd.to_datetime(first,unit='T')
-            #second= pd.to_datetime(second, unit='T')
-            #text_input.value == text_input2.value
-            second > first
-        except TypeError:
-            raise TypeError("enter correct dates")
-
-
-        try:
-            second== first
-
-        except TypeError:
-            raise TypeError("enter correct dates")
-
-        try:
-           first > second
-        except  ValueError:
-           raise ValueError("end date is greater than start date, enter correct dates")
-
-
-
-
+        if second== first or first > second:
+            raise TypeError("start date must be earlier than the end date ")
 
         try:
             input=int(average_input.value)
-            if input > 0:     #or average_input.value is NaN:
+            if input > 0:
                 success_message.text=""
+            elif input <= 0:
+                raise ValueError()
 
         except ValueError:
-            raise ValueError("Please enter the number greater than 0")
-
-
-            #return False
-
+            raise ValueError("The binning interval must be a number greater than 0")
 
             # query data in mysql database
         sql1 = 'SELECT  str_to_date(datetime,"%Y-%m-%d %H:%i:%s") AS datetime, seeing  from seeing ' \
@@ -127,8 +102,8 @@ def update():
         df2.index = df2["_timestamp_"]
         df1.index = df1['datetime']
 
-        #df2.index = df2.set_index("_timestamp_")
-        #df1.index = df1.set_index('datetime')
+        #df2_= df2.reset_index().set_in        dex("_timestamp_")
+        #df1_ = df1.reset_index().set_index('datetime')
 
         print(df2.index)
 
@@ -175,19 +150,15 @@ def update():
 
     except ValueError as ve:
         #Raised when the built-in function for a data type has the valid type of arguments, but the arguments have invalid values specified.(end > start)
-        error_message.text=str(ve) #"date entered first is greater than date entered last"
+        error_message.text=str(ve)
         success_message.text = ""
     except  TypeError as te:
         #Raised when an operation or function is attempted that is invalid for the specified data type.(rong data in input field)
         error_message.text=str(te)
-            #"The day start at mid-day please enter the day before on start date"
         success_message.text = ""
-    except RuntimeError:
-        #Raised when a generated error does not fall into any category.(offline)
-        error_message.text="please check your connection"
+
     except Exception as error:  # Base class for all exceptions(taking care for any error)
         error_message.text = str(error), " sorry something went rong"
-        # error_message.text ='<b>The date/average entered is incorrect</b>'
         success_message.text = ""
 
 
@@ -195,26 +166,26 @@ button_1.on_click(update)
 update()
 
 #plot labels
-p = figure(title="external vs internal seeing (at given minutes of average and median ) ", x_axis_type='datetime'
+p = figure(title=f"external vs internal seeing ({average_input.value} minute bins) ", x_axis_type='datetime'
            , x_axis_label='datetime', y_axis_label='seeing',plot_width=1000, plot_height=500,tools=TOOLS)
-dif=figure(title='difference between internal and external (comparing ee50 with seeing also fwhm with seeing)', x_axis_type='datetime',
+dif=figure(title=f'difference between average internal and external seeing ({average_input.value} minute bins)', x_axis_type='datetime',
            x_axis_label='datetime', y_axis_label='seeing',plot_width=1000, plot_height=500,tools=TOOLS)
 
 #plots
 #plots for external seeing
-p.circle(source=mean_source1, x='datetime',y='seeing', legend="external_average" ,fill_color="white",color='green')
-p.line(source=median_source1, x='datetime',y='seeing', legend="external_median" ,color='blue')
+p.circle(source=mean_source1, x='datetime',y='seeing', legend="external average" ,fill_color="white",color='green')
+p.line(source=median_source1, x='datetime',y='seeing', legend="external median" ,color='blue')
 
 #plots showing median and mean for ee50 and fwhm
-p.circle(source=mean_source, x='_timestamp_', y='ee50', legend='ee50_average')
-p.circle(source=mean_source, x='_timestamp_', y='fwhm', legend='fwhm_average', color='red', fill_color='white')
+p.circle(source=mean_source, x='_timestamp_', y='ee50', legend='ee50 average')
+p.circle(source=mean_source, x='_timestamp_', y='fwhm', legend='fwhm average', color='red', fill_color='white')
 
-p.line(source=median_source, x='_timestamp_', y='ee50', legend='ee50_median', color='green')
-p.line(source=median_source, x='_timestamp_', y='fwhm', legend='fwhm_median', color='orange')
+p.line(source=median_source, x='_timestamp_', y='ee50', legend='ee50 median', color='green')
+p.line(source=median_source, x='_timestamp_', y='fwhm', legend='fwhm median', color='orange')
 
 #for difference
-dif.circle(source=difference_source1, x='_timestamp_', y='difference1', legend='fwhm_difference', fill_color='blue')
-dif.circle(source=difference_source, x='_timestamp_', y='difference', legend='ee50_difference', color='red')
+dif.circle(source=difference_source1, x='_timestamp_', y='difference1', legend='fwhm difference', fill_color='blue')
+dif.circle(source=difference_source, x='_timestamp_', y='difference', legend='ee50 difference', color='red')
 #legends on the plot
 p.xaxis.formatter = date_formatter
 
